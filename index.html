@@ -263,7 +263,127 @@
             background: white;
         }
 
-        /* (clippy UI removed) */
+        /* Clippy */
+        .clippy-container {
+            position: fixed;
+            bottom: 80px;
+            right: 40px;
+            z-index: 10001;
+            display: none;
+        }
+
+        .clippy-container.show {
+            display: block;
+            animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes slideInBounce {
+            0% { transform: translateX(400px) scale(0.5); opacity: 0; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        .clippy-character {
+            font-size: 120px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .clippy-character:hover {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-8px) rotate(-3deg); }
+            50% { transform: translateY(-15px) rotate(0deg); }
+            75% { transform: translateY(-8px) rotate(3deg); }
+        }
+
+        .clippy-bubble {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 3px solid #667eea;
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 25px;
+            min-width: 350px;
+            max-width: 450px;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3), 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .clippy-pointer {
+            position: absolute;
+            bottom: calc(100% + 3px);
+            right: 40px;
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 18px solid white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .clippy-pointer::before {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: -21px;
+            width: 0;
+            height: 0;
+            border-left: 21px solid transparent;
+            border-right: 21px solid transparent;
+            border-top: 21px solid #667eea;
+        }
+
+        .clippy-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 107, 107, 0.1);
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #ff6b6b;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .clippy-close:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .clippy-text {
+            font-size: 17px;
+            line-height: 1.6;
+            padding-right: 32px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .clippy-emoji {
+            font-size: 24px;
+            margin-right: 8px;
+            display: inline-block;
+            animation: emojiWiggle 1s ease-in-out infinite;
+        }
+
+        @keyframes emojiWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
 
         /* Email App */
         .email-app {
@@ -749,7 +869,15 @@
     </style>
 </head>
 <body>
-    <!-- Clippy UI removed -->
+    <!-- Clippy Character -->
+    <div id="clippy-container" class="clippy-container">
+        <div id="clippy-character" class="clippy-character">📎</div>
+        <div class="clippy-bubble">
+            <button class="clippy-close" onclick="dismissClippy()">×</button>
+            <div class="clippy-text" id="clippy-text"></div>
+        </div>
+        <div class="clippy-pointer"></div>
+    </div>
 
     <!-- Main Desktop -->
     <div id="desktop">
