@@ -1,0 +1,2457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline 23:59 - Cybersecurity Awareness Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Desktop */
+        #desktop {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23667eea" width="100" height="100"/><circle fill="%23764ba2" fill-opacity="0.1" cx="50" cy="50" r="40"/></svg>');
+            background-size: 100px 100px;
+        }
+
+        /* Desktop Icons */
+        #desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-icon-img {
+            font-size: 48px;
+            margin-bottom: 4px;
+        }
+
+        .desktop-icon-label {
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Taskbar */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8px;
+            z-index: 9999;
+        }
+
+        .taskbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .start-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .start-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #taskbar-windows {
+            display: flex;
+            gap: 4px;
+        }
+
+        .taskbar-window {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .taskbar-window.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .taskbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .system-tray {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .notification-badge {
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Start Menu */
+        .start-menu {
+            position: fixed;
+            bottom: 56px;
+            left: 8px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 10000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .start-menu.hidden {
+            display: none;
+        }
+
+        .menu-section {
+            margin-bottom: 16px;
+        }
+
+        .menu-section h3 {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .menu-item {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            min-width: 400px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - 48px) !important;
+            border-radius: 0;
+        }
+
+        .window-titlebar {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .window-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .window-btn.close:hover {
+            background: #e74c3c;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            background: white;
+        }
+
+        /* (clippy UI removed) */
+
+        /* Email App */
+        .email-app {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100%;
+        }
+
+        .email-list {
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .email-item:hover {
+            background: #f5f5f5;
+        }
+
+        .email-item.unread {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .email-item.selected {
+            background: #bbdefb;
+        }
+
+        .email-from {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .email-subject {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .email-preview {
+            font-size: 12px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .email-viewer {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .email-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .email-body {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .email-link {
+            color: #667eea;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .email-link:hover {
+            color: #5568d3;
+        }
+
+        /* Browser */
+        .browser-app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #f0f0f0;
+        }
+
+        .chrome-topbar {
+            background: #e0e0e0;
+            display: flex;
+            padding: 8px 8px 0 8px;
+            gap: 4px;
+        }
+
+        .chrome-tab {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            font-size: 13px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chrome-tab.active-tab {
+            background: white;
+        }
+
+        .chrome-toolbar {
+            background: white;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .address-bar {
+            flex: 1;
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .address-bar:focus {
+            border-color: #667eea;
+        }
+
+        .browser-content {
+            flex: 1;
+            background: white;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        /* LMS Pages */
+        .lms-homepage {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .lms-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .lms-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .lms-shortcut {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .lms-shortcut:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+
+        .lms-shortcut-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .lms-shortcut-label {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .lms-signin {
+            max-width: 400px;
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .form-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .form-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* File Explorer */
+        .file-explorer {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-toolbar {
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .path-bar {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .file-list {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #f0f0f0;
+        }
+
+        .file-icon {
+            font-size: 32px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Text Editor */
+        .textfile-app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .textfile-toolbar {
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .textfile-name {
+            font-weight: 600;
+        }
+
+        .textfile-editor {
+            flex: 1;
+            padding: 16px;
+        }
+
+        .textfile-content {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+        }
+
+        /* Todo App */
+        .todo-app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .todo-toolbar {
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .todo-list {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .todo-text {
+            flex: 1;
+        }
+
+        /* Trash */
+        .trash-app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trash-toolbar {
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .trash-list {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-4 {
+            margin-top: 16px;
+        }
+
+        /* Screen shake and alert effects */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-3px, 3px); }
+            20%, 40%, 60%, 80% { transform: translate(3px, -3px); }
+        }
+
+        @keyframes redFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.15); }
+        }
+
+        .screen-shake {
+            animation: screenShake 0.5s ease-in-out;
+        }
+
+        .red-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 99999;
+            animation: redFlash 0.8s ease-in-out 3;
+        }
+
+        .alert-pulse {
+            animation: alertPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Clippy UI removed -->
+
+    <!-- Main Desktop -->
+    <div id="desktop">
+        <!-- Taskbar -->
+        <div id="taskbar">
+            <div class="taskbar-left">
+                <button class="start-button" onclick="toggleStartMenu()">
+                    <span class="start-text">START</span>
+                </button>
+                <div id="taskbar-windows"></div>
+            </div>
+            <div class="taskbar-right">
+                <div class="system-tray">
+                    <div class="wifi-indicator">
+                        <span>📶</span>
+                    </div>
+                    <div class="email-notification" onclick="openEmail()" style="cursor: pointer; position: relative;">
+                        <span>📧</span>
+                        <span id="email-badge" class="notification-badge hidden">0</span>
+                    </div>
+                    <div class="clock">
+                        <span id="clock-time">12:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="start-menu hidden">
+            <div class="start-menu-content">
+                <div class="menu-section">
+                    <h3>Applications</h3>
+                    <button class="menu-item" onclick="openEmail()">📧 Email</button>
+                    <button class="menu-item" onclick="openBrowser()">🌐 Browser</button>
+                    <button class="menu-item" onclick="openFileExplorer()">📁 File Explorer</button>
+                    <button class="menu-item" onclick="openTasks()">📝 Tasks</button>
+                </div>
+                <div class="menu-section">
+                    <button class="menu-item" onclick="restartGame()">🔄 Restart Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Icons -->
+        <div id="desktop-icons">
+            <div class="desktop-icon" onclick="openEmail()">
+                <div class="desktop-icon-img">📧</div>
+                <div class="desktop-icon-label">Email</div>
+            </div>
+            <div class="desktop-icon" onclick="openBrowser()">
+                <div class="desktop-icon-img">🌐</div>
+                <div class="desktop-icon-label">Browser</div>
+            </div>
+            <div class="desktop-icon" onclick="openFileExplorer()">
+                <div class="desktop-icon-img">📁</div>
+                <div class="desktop-icon-label">Files</div>
+            </div>
+            <div class="desktop-icon" onclick="openTasks()">
+                <div class="desktop-icon-img">📝</div>
+                <div class="desktop-icon-label">Tasks</div>
+            </div>
+            <div class="desktop-icon" onclick="openTrash()">
+                <div class="desktop-icon-img">🗑️</div>
+                <div class="desktop-icon-label">Trash</div>
+            </div>
+        </div>
+
+        <!-- Windows Container -->
+        <div id="windows-container"></div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            windows: [],
+            nextWindowId: 1,
+            activeWindow: null,
+            files: [],
+            trash: [],
+            emails: [],
+            unreadEmails: 0,
+            tutorialStep: 0,
+            tasksOpened: false,
+            passwordEntered: false,
+            accountCreated: false,
+            lmsLoggedIn: false,
+            browserHistory: [],
+            browserCurrentIndex: -1,
+            phishingStarted: false,
+            fellForPhishing: false,
+            investigationComplete: false,
+            phishedCredentials: null,
+            firstSecurityEmailRead: false
+        };
+
+        // Initialize Game
+        function initGame() {
+            loadFromStorage();
+            
+            // Create initial files
+            if (gameState.files.length === 0) {
+                gameState.files = [
+                    {
+                        id: 'tasks',
+                        name: 'Tasks',
+                        type: 'text',
+                        content: '☐ Create your ISSATSO+ account to keep up with updates',
+                        location: 'Documents'
+                    }
+                ];
+            }
+
+            // Show initial Clippy message
+            if (!gameState.tasksOpened) {
+                setTimeout(() => {
+                    showClippy("I should check my tasks for today");
+                }, 1000);
+            }
+
+            // Update clock
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // Save state periodically
+            setInterval(saveToStorage, 5000);
+        }
+
+        // Clippy Functions
+        function showClippy(message) {
+            const container = document.getElementById('clippy-container');
+            const text = document.getElementById('clippy-text');
+            
+            // Add context-appropriate emoji based on message content
+            let emoji = '💬';
+            
+            if (message.toLowerCase().includes('task')) {
+                emoji = '📋';
+            } else if (message.toLowerCase().includes('email')) {
+                emoji = '📧';
+            } else if (message.toLowerCase().includes('urgent')) {
+                emoji = '⚠️';
+            } else if (message.toLowerCase().includes('password')) {
+                emoji = '🔐';
+            } else if (message.toLowerCase().includes('security') || message.toLowerCase().includes('didn\'t change')) {
+                emoji = '🚨';
+            } else if (message.toLowerCase().includes('verify') || message.toLowerCase().includes('check')) {
+                emoji = '🔍';
+            } else if (message.toLowerCase().includes('great') || message.toLowerCase().includes('congratulations')) {
+                emoji = '🎉';
+            } else if (message.toLowerCase().includes('ohoh') || message.toLowerCase().includes('damn')) {
+                emoji = '😰';
+            } else if (message.toLowerCase().includes('learned') || message.toLowerCase().includes('spot')) {
+                emoji = '🎓';
+            }
+            
+            text.innerHTML = `<span class="clippy-emoji">${emoji}</span>${message}`;
+            container.classList.add('show');
+        }
+
+        function dismissClippy() {
+            const container = document.getElementById('clippy-container');
+            container.classList.remove('show');
+        }
+
+        // Alert Effects for Critical Emails
+        function playAlertSound() {
+            // Create an urgent alert sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // First beep
+            const oscillator1 = audioContext.createOscillator();
+            const gainNode1 = audioContext.createGain();
+            
+            oscillator1.connect(gainNode1);
+            gainNode1.connect(audioContext.destination);
+            
+            oscillator1.frequency.value = 800;
+            oscillator1.type = 'sine';
+            
+            gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator1.start(audioContext.currentTime);
+            oscillator1.stop(audioContext.currentTime + 0.2);
+            
+            // Second beep (higher pitch)
+            setTimeout(() => {
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode2 = audioContext.createGain();
+                
+                oscillator2.connect(gainNode2);
+                gainNode2.connect(audioContext.destination);
+                
+                oscillator2.frequency.value = 1000;
+                oscillator2.type = 'sine';
+                
+                gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator2.start(audioContext.currentTime);
+                oscillator2.stop(audioContext.currentTime + 0.2);
+            }, 250);
+            
+            // Third beep (highest pitch)
+            setTimeout(() => {
+                const oscillator3 = audioContext.createOscillator();
+                const gainNode3 = audioContext.createGain();
+                
+                oscillator3.connect(gainNode3);
+                gainNode3.connect(audioContext.destination);
+                
+                oscillator3.frequency.value = 1200;
+                oscillator3.type = 'sine';
+                
+                gainNode3.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gainNode3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator3.start(audioContext.currentTime);
+                oscillator3.stop(audioContext.currentTime + 0.3);
+            }, 500);
+        }
+
+        function triggerScreenEffects() {
+            const desktop = document.getElementById('desktop');
+            
+            // Add screen shake
+            desktop.classList.add('screen-shake');
+            setTimeout(() => {
+                desktop.classList.remove('screen-shake');
+            }, 500);
+            
+            // Add red flash overlay
+            const flashOverlay = document.createElement('div');
+            flashOverlay.className = 'red-flash';
+            document.body.appendChild(flashOverlay);
+            
+            setTimeout(() => {
+                flashOverlay.remove();
+            }, 2400);
+            
+            // Vibrate if supported (mobile devices)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+        }
+
+        function isCriticalEmail(email) {
+            // Check if email is a security alert or urgent message
+            return (
+                (email.from === 'issatso-support@issatso.tn' && email.subject.includes('Security Alert')) ||
+                (email.from === 'issatso.verify@gmail.com' && email.subject.includes('URGENT'))
+            );
+        }
+
+        // Window Management
+        function createWindow(type, title, content) {
+            const windowId = gameState.nextWindowId++;
+            const windowsContainer = document.getElementById('windows-container');
+            
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.dataset.windowId = windowId;
+            windowEl.dataset.windowType = type;
+            windowEl.style.top = `${50 + (gameState.windows.length * 30)}px`;
+            windowEl.style.left = `${100 + (gameState.windows.length * 30)}px`;
+            windowEl.style.width = '800px';
+            windowEl.style.height = '600px';
+            
+            windowEl.innerHTML = `
+                <div class="window-titlebar">
+                    <div class="window-title">${title}</div>
+                    <div class="window-controls">
+                        <button class="window-btn minimize" onclick="minimizeWindow(${windowId})">_</button>
+                        <button class="window-btn maximize" onclick="maximizeWindow(${windowId})">☐</button>
+                        <button class="window-btn close" onclick="closeWindow(${windowId})">✕</button>
+                    </div>
+                </div>
+                <div class="window-content">${content}</div>
+            `;
+            
+            windowsContainer.appendChild(windowEl);
+            makeDraggable(windowEl);
+            
+            gameState.windows.push({ id: windowId, type, title, element: windowEl });
+            updateTaskbar();
+            focusWindow(windowId);
+            
+            return windowId;
+        }
+
+        function closeWindow(windowId) {
+            const windowData = gameState.windows.find(w => w.id === windowId);
+            if (windowData) {
+                windowData.element.remove();
+                gameState.windows = gameState.windows.filter(w => w.id !== windowId);
+                updateTaskbar();
+            }
+        }
+
+        function minimizeWindow(windowId) {
+            const windowData = gameState.windows.find(w => w.id === windowId);
+            if (windowData) {
+                windowData.element.style.display = 'none';
+                updateTaskbar();
+            }
+        }
+
+        function maximizeWindow(windowId) {
+            const windowData = gameState.windows.find(w => w.id === windowId);
+            if (windowData) {
+                windowData.element.classList.toggle('maximized');
+            }
+        }
+
+        function focusWindow(windowId) {
+            gameState.windows.forEach(w => {
+                w.element.style.zIndex = 100;
+            });
+            const windowData = gameState.windows.find(w => w.id === windowId);
+            if (windowData) {
+                windowData.element.style.zIndex = 1000;
+                if (windowData.element.style.display === 'none') {
+                    windowData.element.style.display = 'flex';
+                }
+                gameState.activeWindow = windowId;
+                updateTaskbar();
+            }
+        }
+
+        function makeDraggable(windowEl) {
+            const titlebar = windowEl.querySelector('.window-titlebar');
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            titlebar.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-btn')) return;
+                if (windowEl.classList.contains('maximized')) return;
+                
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = windowEl.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                
+                focusWindow(parseInt(windowEl.dataset.windowId));
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                windowEl.style.left = `${initialLeft + deltaX}px`;
+                windowEl.style.top = `${initialTop + deltaY}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        function updateTaskbar() {
+            const taskbarWindows = document.getElementById('taskbar-windows');
+            taskbarWindows.innerHTML = '';
+            
+            gameState.windows.forEach(w => {
+                const btn = document.createElement('button');
+                btn.className = 'taskbar-window';
+                if (w.id === gameState.activeWindow) {
+                    btn.classList.add('active');
+                }
+                btn.textContent = w.title;
+                btn.onclick = () => focusWindow(w.id);
+                taskbarWindows.appendChild(btn);
+            });
+        }
+
+        // Start Menu
+        function toggleStartMenu() {
+            const startMenu = document.getElementById('start-menu');
+            startMenu.classList.toggle('hidden');
+        }
+
+        // Email App
+        function openEmail() {
+            // Check if email window already exists
+            const existingWindow = gameState.windows.find(w => w.type === 'email');
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                return;
+            }
+
+            const emailContent = `
+                <div class="email-app">
+                    <div class="email-list" id="email-list"></div>
+                    <div class="email-viewer" id="email-viewer">
+                        <div class="text-center" style="padding: 40px; color: #999;">
+                            Select an email to read
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const windowId = createWindow('email', '📧 Email', emailContent);
+            renderEmailList();
+            
+            // Mark emails as read
+            gameState.unreadEmails = 0;
+            updateEmailBadge();
+        }
+
+        function renderEmailList() {
+            const emailList = document.getElementById('email-list');
+            if (!emailList) return;
+            
+            emailList.innerHTML = '';
+            
+            if (gameState.emails.length === 0) {
+                emailList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No emails yet</div>';
+                return;
+            }
+            
+            gameState.emails.forEach((email, index) => {
+                const emailItem = document.createElement('div');
+                emailItem.className = 'email-item';
+                if (email.unread) emailItem.classList.add('unread');
+                emailItem.innerHTML = `
+                    <div class="email-from">${email.from}</div>
+                    <div class="email-subject">${email.subject}</div>
+                    <div class="email-preview">${email.preview}</div>
+                `;
+                emailItem.onclick = () => viewEmail(index);
+                emailList.appendChild(emailItem);
+            });
+        }
+
+        function viewEmail(index) {
+            const email = gameState.emails[index];
+            const emailViewer = document.getElementById('email-viewer');
+            
+            // Trigger alert effects for critical emails
+            if (email.unread && isCriticalEmail(email)) {
+                playAlertSound();
+                triggerScreenEffects();
+            }
+            
+            email.unread = false;
+            
+            // Check if this is the first security alert email being opened
+            if (email.from === 'issatso-support@issatso.tn' && 
+                email.subject.includes('Security Alert') && 
+                !email.subject.includes('changed successfully') &&
+                !gameState.firstSecurityEmailRead) {
+                gameState.firstSecurityEmailRead = true;
+                
+                // Show Clippy message after reading the email
+                setTimeout(() => {
+                    showClippy("Ohoh, it looks like it was not a good idea to make your password your name and birthdate. Maybe you should change it.");
+                    
+                    // Update tasks
+                    const tasksFile = gameState.files.find(f => f.id === 'tasks');
+                    if (tasksFile) {
+                        tasksFile.content = `☑ Create your ISSATSO+ account to keep up with updates
+☐ Change your password`;
+                    }
+                    
+                    // Start phishing scenario after a delay
+                    setTimeout(() => {
+                        startPhishingScenario();
+                    }, 5000);
+                }, 1000);
+            }
+            
+            // Check if this is the phishing email and add clickable link
+            let bodyContent = email.content;
+            if (email.from === 'issatso.verify@gmail.com') {
+                bodyContent = email.content.replace(
+                    '[VERIFY NOW] → Click here: issatso-verify.com/secure',
+                    '<span class="email-link" onclick="openPhishingWebsite()">[VERIFY NOW] → Click here: issatso-verify.com/secure</span>'
+                );
+            }
+            
+            emailViewer.innerHTML = `
+                <div class="email-header">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">From: ${email.from}</div>
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">${email.subject}</div>
+                    <div style="font-size: 12px; color: #666;">${email.date || 'Today'}</div>
+                </div>
+                <div class="email-body">${bodyContent}</div>
+                ${email.from === 'issatso-support@issatso.tn' && email.subject.includes('Security Alert') && gameState.fellForPhishing ? 
+                    '<div style="margin-top: 24px;"><button class="btn-primary" onclick="showEmailComparison()">🔍 Investigate Suspicious Emails</button></div>' : ''}
+            `;
+            
+            renderEmailList();
+        }
+        function addEmail(from, subject, content) {
+    const email = {
+        from,
+        subject,
+        content,
+        preview: content.substring(0, 100) + '...',
+        unread: true,
+        date: new Date().toLocaleString()
+    };
+
+    // 1. Add email to the list immediately
+    gameState.emails.unshift(email);
+    gameState.unreadEmails++;
+    updateEmailBadge();
+    
+    // Refresh the UI if the email window is open (so it appears in real-time)
+    const emailList = document.getElementById('email-list');
+    if (emailList) {
+        renderEmailList();
+    }
+
+    // 2. Wait 4 seconds (4000 milliseconds) before showing the notification
+    setTimeout(() => {
+        showClippy("New email! Check it");
+    }, 4000);
+}
+
+
+        function updateEmailBadge() {
+            const badge = document.getElementById('email-badge');
+            const emailNotification = document.querySelector('.email-notification');
+            
+            if (gameState.unreadEmails > 0) {
+                badge.textContent = gameState.unreadEmails;
+                badge.classList.remove('hidden');
+                
+                // Add pulse effect if there are critical unread emails
+                const hasCriticalUnread = gameState.emails.some(email => email.unread && isCriticalEmail(email));
+                if (hasCriticalUnread && emailNotification) {
+                    emailNotification.classList.add('alert-pulse');
+                } else if (emailNotification) {
+                    emailNotification.classList.remove('alert-pulse');
+                }
+            } else {
+                badge.classList.add('hidden');
+                if (emailNotification) {
+                    emailNotification.classList.remove('alert-pulse');
+                }
+            }
+        }
+
+        // Browser App
+        function openBrowser() {
+            const existingWindow = gameState.windows.find(w => w.type === 'browser');
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                return;
+            }
+
+            const browserContent = `
+                <div class="browser-app">
+                    <div class="chrome-topbar">
+                        <div class="chrome-tab active-tab">
+                            <span class="tab-title">New Tab</span>
+                        </div>
+                    </div>
+                    <div class="chrome-toolbar">
+                        <button class="nav-btn" onclick="browserBack()">←</button>
+                        <button class="nav-btn" onclick="browserForward()">→</button>
+                        <button class="nav-btn" onclick="browserRefresh()">⟳</button>
+                        <input type="text" class="address-bar" id="address-bar" placeholder="Search Google or type a URL" onkeydown="handleAddressEnter(event)">
+                    </div>
+                    <div class="browser-content" id="browser-content"></div>
+                </div>
+            `;
+            
+            createWindow('browser', '🌐 Browser', browserContent);
+            navigateTo('home');
+        }
+
+        function navigateTo(page, addToHistory = true) {
+            const browserContent = document.getElementById('browser-content');
+            const addressBar = document.getElementById('address-bar');
+            
+            if (!browserContent) return;
+            
+            if (addToHistory) {
+                gameState.browserHistory = gameState.browserHistory.slice(0, gameState.browserCurrentIndex + 1);
+                gameState.browserHistory.push(page);
+                gameState.browserCurrentIndex = gameState.browserHistory.length - 1;
+            }
+            
+            let content = '';
+            let url = '';
+            
+            switch(page) {
+                case 'home':
+                    url = 'google.com';
+                    content = `
+                        <div class="lms-homepage">
+                            <div class="lms-header">
+                                <h1 style="font-size: 48px; margin-bottom: 16px;">Google</h1>
+                            </div>
+                            <div class="lms-shortcuts">
+                                <div class="lms-shortcut" onclick="navigateTo('issatso-signin')">
+                                    <div class="lms-shortcut-icon">🎓</div>
+                                    <div class="lms-shortcut-label">ISSATSO+</div>
+                                </div>
+                                <div class="lms-shortcut" onclick="alert('This is just a demo!')">
+                                    <div class="lms-shortcut-icon">📧</div>
+                                    <div class="lms-shortcut-label">Gmail</div>
+                                </div>
+                                <div class="lms-shortcut" onclick="alert('This is just a demo!')">
+                                    <div class="lms-shortcut-icon">📺</div>
+                                    <div class="lms-shortcut-label">YouTube</div>
+                                </div>
+                                <div class="lms-shortcut" onclick="navigateTo('flappy-game')">
+                                    <div class="lms-shortcut-icon">🐦</div>
+                                    <div class="lms-shortcut-label">Flappy Bird</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'issatso-signin':
+                    url = 'issatsoplus.com';
+                    content = `
+                        <div class="lms-signin">
+                            <h2 style="text-align: center; margin-bottom: 32px; color: #667eea;">ISSATSO+</h2>
+                            <form onsubmit="handleLogin(event)">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="login-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="login-password" required>
+                                </div>
+                                <button type="submit" class="btn-primary">Sign In</button>
+                            </form>
+                            <div class="form-link">
+                                <a href="#" onclick="navigateTo('issatso-signup'); return false;">Don't have an account? Sign up</a>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'issatso-signup':
+                    url = 'issatsoplus.com/signup';
+                    content = `
+                        <div class="lms-signin">
+                            <h2 style="text-align: center; margin-bottom: 32px; color: #667eea;">Create Account</h2>
+                            <form onsubmit="handleSignup(event)">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="signup-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="signup-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="signup-password" oninput="handlePasswordInput(event)" required>
+                                </div>
+                                <button type="submit" class="btn-primary">Create Account</button>
+                            </form>
+                            <div class="form-link">
+                                <a href="#" onclick="navigateTo('issatso-signin'); return false;">Already have an account? Sign in</a>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'issatso-dashboard':
+                    url = 'issatsoplus.com/dashboard';
+                    content = `
+                        <div class="lms-homepage">
+                            <div class="lms-header">
+                                <h1>Welcome to ISSATSO+</h1>
+                                <p style="color: #666; margin-top: 8px;">Your learning management system</p>
+                            </div>
+                            <div class="lms-shortcuts">
+                                <div class="lms-shortcut">
+                                    <div class="lms-shortcut-icon">📚</div>
+                                    <div class="lms-shortcut-label">My Courses</div>
+                                </div>
+                                <div class="lms-shortcut">
+                                    <div class="lms-shortcut-icon">📝</div>
+                                    <div class="lms-shortcut-label">Assignments</div>
+                                </div>
+                                <div class="lms-shortcut">
+                                    <div class="lms-shortcut-icon">👥</div>
+                                    <div class="lms-shortcut-label">Profile</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'phishing-site':
+                    url = 'http://issatso-verify.com/secure';
+                    content = `
+                        <div class="lms-signin">
+                            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                <strong style="color: #856404;">⚠️ URGENT: Account Verification Required</strong>
+                            </div>
+                            <h2 style="text-align: center; margin-bottom: 32px; color: #667eea;">ISSATSO+ Security</h2>
+                            <p style="text-align: center; margin-bottom: 24px; color: #666;">
+                                Please verify your credentials to secure your account
+                            </p>
+                            <form onsubmit="handlePhishingLogin(event)">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="phishing-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="phishing-password" required>
+                                </div>
+                                <button type="submit" class="btn-primary">Verify Account</button>
+                            </form>
+                            <div style="text-align: center; margin-top: 16px; font-size: 12px; color: #999;">
+                                Secure verification powered by ISSATSO+
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'flappy-game':
+                    url = 'flappybird.io';
+                    content = `
+                        <div id="flappy-game-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 50%, #98D8C8 100%); padding: 20px;">
+                            <div style="background: rgba(255, 255, 255, 0.9); padding: 24px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); max-width: 500px;">
+                                <h1 style="color: #FF6B6B; text-align: center; margin-bottom: 8px; font-size: 42px; font-family: 'Comic Sans MS', cursive; text-shadow: 3px 3px 0px #FFA07A;">🐤 Flappy Bird 🐤</h1>
+                                <div style="text-align: center; color: #666; margin-bottom: 16px; font-size: 14px;">Take a break from security training!</div>
+                                <canvas id="flappy-canvas" width="400" height="600" style="border: 4px solid #4ECDC4; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: block; background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 70%, #F6E58D 100%);"></canvas>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                                    <div id="flappy-score" style="color: #FF6B6B; font-size: 28px; font-weight: bold; font-family: 'Comic Sans MS', cursive;">Score: 0</div>
+                                    <div id="flappy-high-score" style="color: #4ECDC4; font-size: 18px; font-weight: bold;">Best: 0</div>
+                                </div>
+                                <div id="flappy-instructions" style="text-align: center; margin-top: 16px;">
+                                    <div style="color: #555; margin-bottom: 12px; font-size: 15px;">
+                                        🖱️ Click anywhere or press <span style="background: #FFE66D; padding: 4px 8px; border-radius: 4px; font-weight: bold;">SPACE</span> to fly!
+                                    </div>
+                                    <button onclick="initFlappyGame()" style="margin-top: 8px; padding: 14px 32px; background: linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%); color: white; border: none; border-radius: 25px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🚀 Start Game</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        setupFlappyGame();
+                    }, 100);
+                    break;
+            }
+            
+            browserContent.innerHTML = content;
+            addressBar.value = url;
+        }
+
+        function handleAddressEnter(event) {
+            if (event.key === 'Enter') {
+                const url = event.target.value.toLowerCase();
+                if (url.includes('issatso') || url.includes('issatsoplus')) {
+                    navigateTo('issatso-signin');
+                } else {
+                    navigateTo('home');
+                }
+            }
+        }
+
+        function browserBack() {
+            if (gameState.browserCurrentIndex > 0) {
+                gameState.browserCurrentIndex--;
+                navigateTo(gameState.browserHistory[gameState.browserCurrentIndex], false);
+            }
+        }
+
+        function browserForward() {
+            if (gameState.browserCurrentIndex < gameState.browserHistory.length - 1) {
+                gameState.browserCurrentIndex++;
+                navigateTo(gameState.browserHistory[gameState.browserCurrentIndex], false);
+            }
+        }
+
+        function browserRefresh() {
+            if (gameState.browserCurrentIndex >= 0) {
+                navigateTo(gameState.browserHistory[gameState.browserCurrentIndex], false);
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            const savedUser = localStorage.getItem('lms_user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                if (user.email === email && user.password === password) {
+                    gameState.lmsLoggedIn = true;
+                    navigateTo('issatso-dashboard');
+                } else {
+                    alert('Invalid credentials');
+                }
+            } else {
+                alert('No account found. Please sign up first.');
+            }
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            // Save user
+            localStorage.setItem('lms_user', JSON.stringify({ name, email, password }));
+            
+            gameState.accountCreated = true;
+            gameState.lmsLoggedIn = true;
+            
+            // Navigate to dashboard
+            navigateTo('issatso-dashboard');
+            
+            // Send security alert email after a delay
+            setTimeout(() => {
+                addEmail(
+                    'issatso-support@issatso.tn',
+                    'Security Alert - ISSATSO+',
+                    `New login detected from: Germany
+Device: Unknown Windows PC
+Time: ${new Date().toLocaleString()}
+
+If this wasn't you, please change your password immediately by visiting your account settings.
+
+This is an automated security message from ISSATSO+.`
+                );
+            }, 2000);
+        }
+
+        function handlePasswordInput(event) {
+            if (!gameState.passwordEntered && event.target.value.length > 3) {
+                gameState.passwordEntered = true;
+                dismissClippy();
+                setTimeout(() => {
+                    showClippy("I will keep it simple and easy to remember. I will just use my name and birth date");
+                }, 500);
+            }
+        }
+
+        // SCENARIO 2: PHISHING ATTACK
+        function startPhishingScenario() {
+            if (gameState.phishingStarted) return;
+            gameState.phishingStarted = true;
+            
+            // Send phishing email
+            addEmail(
+                'issatso.verify@gmail.com',
+                '📩 URGENT: Verify Your Account',
+                `Dear Student,
+
+Due to recent hacking attempts on our system, all ISSATSO+ students must verify their account within 1 hour to prevent suspension.
+
+Your grades and timetable may be affected if you do not act immediately.
+
+Click the button below to secure your account:
+
+[VERIFY NOW] → Click here: issatso-verify.com/secure
+
+This is a mandatory security procedure.
+
+ISSATSO+ Security Team`
+            );
+            
+            setTimeout(() => {
+                showClippy("Oh no! An urgent email from ISSATSO+! I better verify my account right away!");
+            }, 2000);
+        }
+
+        function openPhishingWebsite() {
+            // Open browser if not already open
+            const browserWindow = gameState.windows.find(w => w.type === 'browser');
+            if (!browserWindow) {
+                openBrowser();
+                setTimeout(() => {
+                    navigateTo('phishing-site');
+                }, 500);
+            } else {
+                focusWindow(browserWindow.id);
+                navigateTo('phishing-site');
+            }
+        }
+
+        function handlePhishingLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('phishing-email').value;
+            const password = document.getElementById('phishing-password').value;
+            
+            // Mark that user fell for phishing
+            gameState.phishedCredentials = { email, password };
+            gameState.fellForPhishing = true;
+            
+            // Show loading message
+            const browserContent = document.getElementById('browser-content');
+            browserContent.innerHTML = `
+                <div style="text-align: center; padding: 60px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                    <h2>Verifying your account...</h2>
+                    <p style="color: #666; margin-top: 16px;">Please wait while we secure your information.</p>
+                </div>
+            `;
+            
+            // Redirect to real dashboard after delay
+            setTimeout(() => {
+                navigateTo('issatso-dashboard');
+                
+                // Send password changed email
+                setTimeout(() => {
+                    addEmail(
+                        'issatso-support@issatso.tn',
+                        '📩 ISSATSO+ Security Alert',
+                        `Your password was changed successfully.
+
+Time: ${new Date().toLocaleString()}
+IP Address: 185.234.72.19 (Russia)
+Device: Linux Server
+
+If this wasn't you, please contact support immediately.
+
+ISSATSO+ Security Team
+issatso-support@issatso.tn`
+                    );
+                    
+                    // Clippy realization
+                    setTimeout(() => {
+                        showClippy("Wait... I didn't change my password! Damn it.");
+                        
+                        // Add investigation task
+                        const tasksFile = gameState.files.find(f => f.id === 'tasks');
+                        if (tasksFile) {
+                            tasksFile.content = `☑ Create your ISSATSO+ account to keep up with updates
+☐ Change your password
+☐ Investigate the suspicious emails`;
+                        }
+                    }, 3000);
+                }, 2000);
+            }, 3000);
+        }
+
+        function showEmailComparison() {
+            const comparisonContent = `
+                <div style="padding: 40px; max-width: 800px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 32px; text-align: center;">Email Address Comparison</h2>
+                    
+                    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="color: #856404; margin-bottom: 16px;">⚠️ Suspicious Email (Phishing)</h3>
+                        <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 16px;">
+                            issatso.verify<span style="background: #f44336; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">@gmail.com</span>
+                        </div>
+                        <div style="margin-top: 12px; color: #666;">
+                            <strong>Red Flags:</strong>
+                            <ul style="margin-top: 8px; margin-left: 20px;">
+                                <li>Using generic Gmail address instead of official domain</li>
+                                <li>Creates urgency with "URGENT" and time pressure</li>
+                                <li>Threatens account suspension</li>
+                                <li>Suspicious link to different domain</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 12px; padding: 24px;">
+                        <h3 style="color: #155724; margin-bottom: 16px;">✓ Legitimate Email</h3>
+                        <div style="background: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 16px;">
+                            issatso-support<span style="background: #4caf50; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">@issatso.tn</span>
+                        </div>
+                        <div style="margin-top: 12px; color: #666;">
+                            <strong>Trust Indicators:</strong>
+                            <ul style="margin-top: 8px; margin-left: 20px;">
+                                <li>Official domain (.tn = Tunisia country domain)</li>
+                                <li>Professional subdomain (issatso-support)</li>
+                                <li>Informational rather than demanding</li>
+                                <li>No suspicious links or urgent threats</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 32px; text-align: center;">
+                        <button class="btn-primary" onclick="showWebsiteComparison()">Next: Compare Websites</button>
+                    </div>
+                </div>
+            `;
+            
+            createWindow('comparison', '🔍 Email Investigation', comparisonContent);
+        }
+
+        function showWebsiteComparison() {
+            const comparisonContent = `
+                <div style="padding: 40px; max-width: 900px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 32px; text-align: center;">Website Comparison</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                        <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 12px; padding: 20px;">
+                            <h3 style="color: #c62828; margin-bottom: 16px;">❌ Fake Website</h3>
+                            <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div style="font-size: 12px; color: #999; margin-bottom: 4px;">URL:</div>
+                                <div style="font-family: monospace; background: #f44336; color: white; padding: 8px; border-radius: 4px; word-break: break-all;">
+                                    http://issatso-verify.com/secure
+                                </div>
+                            </div>
+                            <ul style="font-size: 14px; color: #666; margin-left: 20px;">
+                                <li>No HTTPS (not secure)</li>
+                                <li>Different domain name</li>
+                                <li>Missing security certificate</li>
+                                <li>Poor grammar/formatting</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e9; border: 2px solid #4caf50; border-radius: 12px; padding: 20px;">
+                            <h3 style="color: #2e7d32; margin-bottom: 16px;">✓ Real Website</h3>
+                            <div style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div style="font-size: 12px; color: #999; margin-bottom: 4px;">URL:</div>
+                                <div style="font-family: monospace; background: #4caf50; color: white; padding: 8px; border-radius: 4px;">
+                                    https://issatsoplus.com
+                                </div>
+                            </div>
+                            <ul style="font-size: 14px; color: #666; margin-left: 20px;">
+                                <li>HTTPS with padlock icon 🔒</li>
+                                <li>Official domain</li>
+                                <li>Valid SSL certificate</li>
+                                <li>Professional design</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                        <h3 style="color: #1565c0; margin-bottom: 12px;">🎓 What You Learned</h3>
+                        <ul style="color: #666; margin-left: 20px; line-height: 1.8;">
+                            <li><strong>Check the sender:</strong> Always verify email addresses match official domains</li>
+                            <li><strong>Beware of urgency:</strong> Phishing emails create false time pressure</li>
+                            <li><strong>Verify URLs:</strong> Hover over links before clicking to see real destination</li>
+                            <li><strong>Look for HTTPS:</strong> Legitimate sites use secure connections</li>
+                            <li><strong>When in doubt:</strong> Contact the organization directly through official channels</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <button class="btn-primary" onclick="completePhishingInvestigation()">Complete Investigation</button>
+                    </div>
+                </div>
+            `;
+            
+            createWindow('website-comparison', '🔍 Website Investigation', comparisonContent);
+        }
+
+        function completePhishingInvestigation() {
+            // Update tasks
+            const tasksFile = gameState.files.find(f => f.id === 'tasks');
+            if (tasksFile) {
+                tasksFile.content = `☑ Create your ISSATSO+ account to keep up with updates
+☑ Change your password
+☑ Investigate the suspicious emails
+
+🎉 Congratulations! You've completed both scenarios and learned:
+   • How to create strong passwords
+   • How to identify phishing emails
+   • How to verify legitimate websites`;
+            }
+            
+            gameState.investigationComplete = true;
+            
+            // Close all comparison windows
+            gameState.windows.filter(w => w.type === 'comparison' || w.type === 'website-comparison').forEach(w => {
+                closeWindow(w.id);
+            });
+            
+            showClippy("Great work! You've learned how to spot phishing attacks. Stay vigilant!");
+            
+            // Add completion email
+            setTimeout(() => {
+                addEmail(
+                    'security-training@issatso.tn',
+                    '🎓 Security Training Complete',
+                    `Congratulations!
+
+You have successfully completed the cybersecurity awareness training.
+
+Skills learned:
+✓ Password security best practices
+✓ Phishing email identification
+✓ Website verification techniques
+✓ Social engineering awareness
+
+Remember: Stay alert, verify sources, and protect your credentials!
+
+ISSATSO+ Security Training Team`
+                );
+            }, 2000);
+        }
+
+        // File Explorer
+        function openFileExplorer() {
+            const existingWindow = gameState.windows.find(w => w.type === 'files');
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                return;
+            }
+
+            const fileContent = `
+                <div class="file-explorer">
+                    <div class="file-toolbar">
+                        <span class="path-bar">📁 My Documents</span>
+                    </div>
+                    <div class="file-list" id="file-list"></div>
+                </div>
+            `;
+            
+            createWindow('files', '📁 File Explorer', fileContent);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('file-list');
+            if (!fileList) return;
+            
+            fileList.innerHTML = '';
+            
+            gameState.files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-icon">${file.type === 'text' ? '📄' : '📁'}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${file.type} file</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn-secondary" onclick="openFile('${file.id}')">Open</button>
+                        <button class="btn-secondary" onclick="deleteFile('${file.id}')">Delete</button>
+                    </div>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function openFile(fileId) {
+            const file = gameState.files.find(f => f.id === fileId);
+            if (!file) return;
+            
+            if (fileId === 'tasks') {
+                openTasks();
+                return;
+            }
+            
+            const content = `
+                <div class="textfile-app">
+                    <div class="textfile-toolbar">
+                        <span class="textfile-name">${file.name}</span>
+                        <button class="btn-primary" onclick="saveFile('${fileId}')">Save</button>
+                    </div>
+                    <div class="textfile-editor">
+                        <textarea class="textfile-content" id="file-content-${fileId}">${file.content}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            createWindow('textfile', file.name, content);
+        }
+
+        function saveFile(fileId) {
+            const textarea = document.getElementById(`file-content-${fileId}`);
+            if (textarea) {
+                const file = gameState.files.find(f => f.id === fileId);
+                if (file) {
+                    file.content = textarea.value;
+                    alert('File saved!');
+                }
+            }
+        }
+
+        function deleteFile(fileId) {
+            const file = gameState.files.find(f => f.id === fileId);
+            if (file && confirm(`Delete ${file.name}?`)) {
+                gameState.files = gameState.files.filter(f => f.id !== fileId);
+                gameState.trash.push(file);
+                renderFileList();
+            }
+        }
+
+        // Tasks
+        function openTasks() {
+            const existingWindow = gameState.windows.find(w => w.type === 'tasks');
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                return;
+            }
+
+            const tasksFile = gameState.files.find(f => f.id === 'tasks');
+            const content = `
+                <div class="todo-app">
+                    <div class="todo-toolbar">
+                        <strong>My Tasks</strong>
+                    </div>
+                    <div class="todo-list" id="todo-list"></div>
+                </div>
+            `;
+            
+            createWindow('tasks', '📝 Tasks', content);
+            renderTodoList();
+            
+            // Mark tasks as opened for tutorial
+            if (!gameState.tasksOpened) {
+                gameState.tasksOpened = true;
+                dismissClippy();
+            }
+        }
+
+        function renderTodoList() {
+            const todoList = document.getElementById('todo-list');
+            if (!todoList) return;
+            
+            const tasksFile = gameState.files.find(f => f.id === 'tasks');
+            if (!tasksFile) return;
+            
+            const lines = tasksFile.content.split('\n').filter(line => line.trim());
+            todoList.innerHTML = '';
+            
+            lines.forEach((line, index) => {
+                const isCompleted = line.startsWith('☑');
+                const text = line.replace(/^[☐☑]\s*/, '');
+                
+                const todoItem = document.createElement('div');
+                todoItem.className = 'todo-item';
+                if (isCompleted) todoItem.classList.add('completed');
+                todoItem.innerHTML = `
+                    <input type="checkbox" class="todo-checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTodo(${index})">
+                    <div class="todo-text">${text}</div>
+                `;
+                todoList.appendChild(todoItem);
+            });
+        }
+
+        function toggleTodo(index) {
+            const tasksFile = gameState.files.find(f => f.id === 'tasks');
+            if (!tasksFile) return;
+            
+            const lines = tasksFile.content.split('\n').filter(line => line.trim());
+            const line = lines[index];
+            
+            if (line.startsWith('☐')) {
+                lines[index] = line.replace('☐', '☑');
+            } else {
+                lines[index] = line.replace('☑', '☐');
+            }
+            
+            tasksFile.content = lines.join('\n');
+            renderTodoList();
+        }
+
+        // Trash
+        function openTrash() {
+            const existingWindow = gameState.windows.find(w => w.type === 'trash');
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                return;
+            }
+
+            const content = `
+                <div class="trash-app">
+                    <div class="trash-toolbar">
+                        <button class="btn-secondary" onclick="emptyTrash()">Empty Trash</button>
+                        <button class="btn-secondary" onclick="restoreAllTrash()">Restore All</button>
+                    </div>
+                    <div class="trash-list" id="trash-list"></div>
+                </div>
+            `;
+            
+            createWindow('trash', '🗑️ Trash', content);
+            renderTrashList();
+        }
+
+        function renderTrashList() {
+            const trashList = document.getElementById('trash-list');
+            if (!trashList) return;
+            
+            trashList.innerHTML = '';
+            
+            if (gameState.trash.length === 0) {
+                trashList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Trash is empty</div>';
+                return;
+            }
+            
+            gameState.trash.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-icon">📄</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${file.type} file</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn-secondary" onclick="restoreFile(${index})">Restore</button>
+                        <button class="btn-secondary" onclick="permanentDelete(${index})">Delete Forever</button>
+                    </div>
+                `;
+                trashList.appendChild(fileItem);
+            });
+        }
+
+        function restoreFile(index) {
+            const file = gameState.trash[index];
+            gameState.files.push(file);
+            gameState.trash.splice(index, 1);
+            renderTrashList();
+            renderFileList();
+        }
+
+        function emptyTrash() {
+            if (confirm('Permanently delete all items?')) {
+                gameState.trash = [];
+                renderTrashList();
+            }
+        }
+
+        function restoreAllTrash() {
+            gameState.files.push(...gameState.trash);
+            gameState.trash = [];
+            renderTrashList();
+            renderFileList();
+        }
+
+        function permanentDelete(index) {
+            if (confirm('Permanently delete this file?')) {
+                gameState.trash.splice(index, 1);
+                renderTrashList();
+            }
+        }
+
+        // Utility Functions
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock-time').textContent = `${hours}:${minutes}`;
+        }
+
+        function restartGame() {
+            if (confirm('Restart the game? All progress will be lost.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('gameState', JSON.stringify({
+                files: gameState.files,
+                trash: gameState.trash,
+                emails: gameState.emails,
+                unreadEmails: gameState.unreadEmails,
+                tutorialStep: gameState.tutorialStep,
+                tasksOpened: gameState.tasksOpened,
+                passwordEntered: gameState.passwordEntered,
+                accountCreated: gameState.accountCreated,
+                lmsLoggedIn: gameState.lmsLoggedIn,
+                phishingStarted: gameState.phishingStarted,
+                fellForPhishing: gameState.fellForPhishing,
+                investigationComplete: gameState.investigationComplete,
+                phishedCredentials: gameState.phishedCredentials,
+                firstSecurityEmailRead: gameState.firstSecurityEmailRead
+            }));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('gameState');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.files = data.files || [];
+                gameState.trash = data.trash || [];
+                gameState.emails = data.emails || [];
+                gameState.unreadEmails = data.unreadEmails || 0;
+                gameState.tutorialStep = data.tutorialStep || 0;
+                gameState.tasksOpened = data.tasksOpened || false;
+                gameState.passwordEntered = data.passwordEntered || false;
+                gameState.accountCreated = data.accountCreated || false;
+                gameState.lmsLoggedIn = data.lmsLoggedIn || false;
+                gameState.phishingStarted = data.phishingStarted || false;
+                gameState.fellForPhishing = data.fellForPhishing || false;
+                gameState.investigationComplete = data.investigationComplete || false;
+                gameState.phishedCredentials = data.phishedCredentials || null;
+                gameState.firstSecurityEmailRead = data.firstSecurityEmailRead || false;
+                updateEmailBadge();
+            }
+        }
+
+        // Click outside to close start menu
+        document.addEventListener('click', (e) => {
+            const startMenu = document.getElementById('start-menu');
+            const startButton = document.querySelector('.start-button');
+            if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
+                startMenu.classList.add('hidden');
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', initGame);
+
+        // FLAPPY BIRD GAME
+        let flappyGame = null;
+
+        function setupFlappyGame() {
+            const canvas = document.getElementById('flappy-canvas');
+            if (!canvas) return;
+            
+            flappyGame = {
+                canvas: canvas,
+                ctx: canvas.getContext('2d'),
+                bird: { x: 80, y: 300, velocity: 0, radius: 18 },
+                pipes: [],
+                score: 0,
+                highScore: parseInt(localStorage.getItem('flappyHighScore')) || 0,
+                gameOver: false,
+                started: false,
+                gravity: 0.35,  // Reduced from 0.5 for easier gameplay
+                jumpStrength: -7,  // Reduced from -8 for smoother jumps
+                pipeWidth: 70,  // Increased from 60
+                pipeGap: 200,  // Increased from 150 for easier gameplay
+                pipeSpeed: 1.8,  // Reduced from 2 for slower movement
+                frameCount: 0,
+                clouds: []
+            };
+            
+            // Initialize clouds for background
+            for (let i = 0; i < 3; i++) {
+                flappyGame.clouds.push({
+                    x: Math.random() * 400,
+                    y: Math.random() * 200,
+                    size: 30 + Math.random() * 30,
+                    speed: 0.2 + Math.random() * 0.3
+                });
+            }
+            
+            updateFlappyHighScore();
+        }
+
+        function initFlappyGame() {
+            if (!flappyGame) return;
+            
+            // Reset game state
+            flappyGame.bird = { x: 80, y: 300, velocity: 0, radius: 18 };
+            flappyGame.pipes = [];
+            flappyGame.score = 0;
+            flappyGame.gameOver = false;
+            flappyGame.started = true;
+            flappyGame.frameCount = 0;
+            
+            // Hide instructions
+            const instructions = document.getElementById('flappy-instructions');
+            if (instructions) instructions.style.display = 'none';
+            
+            updateFlappyScore();
+            
+            // Start game loop
+            requestAnimationFrame(flappyGameLoop);
+            
+            // Add click and keyboard listeners
+            flappyGame.canvas.onclick = flappyJump;
+            document.addEventListener('keydown', flappyKeyHandler);
+        }
+
+        function flappyJump() {
+            if (!flappyGame || !flappyGame.started) return;
+            
+            if (flappyGame.gameOver) {
+                initFlappyGame();
+                return;
+            }
+            
+            flappyGame.bird.velocity = flappyGame.jumpStrength;
+        }
+
+        function flappyKeyHandler(e) {
+            if (e.code === 'Space' && flappyGame && flappyGame.started) {
+                e.preventDefault();
+                flappyJump();
+            }
+        }
+
+        function flappyGameLoop() {
+            if (!flappyGame || !flappyGame.started) return;
+            
+            const { ctx, canvas, bird, pipes, pipeWidth, pipeGap, pipeSpeed, clouds } = flappyGame;
+            
+            // Draw gradient sky
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#E0F6FF');
+            gradient.addColorStop(1, '#F6E58D');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw and update clouds
+            clouds.forEach(cloud => {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.7, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 1.4, cloud.y, cloud.size * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                cloud.x -= cloud.speed;
+                if (cloud.x < -cloud.size * 2) {
+                    cloud.x = canvas.width + cloud.size;
+                    cloud.y = Math.random() * 200;
+                }
+            });
+            
+            if (!flappyGame.gameOver) {
+                // Update bird
+                bird.velocity += flappyGame.gravity;
+                bird.y += bird.velocity;
+                
+                // Generate pipes
+                flappyGame.frameCount++;
+                if (flappyGame.frameCount % 120 === 0) {  // Increased from 90 for more spacing
+                    const minGapY = 80;
+                    const maxGapY = canvas.height - pipeGap - 80;
+                    const gapY = Math.random() * (maxGapY - minGapY) + minGapY;
+                    pipes.push({
+                        x: canvas.width,
+                        gapY: gapY,
+                        scored: false
+                    });
+                }
+                
+                // Update and draw pipes
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    const pipe = pipes[i];
+                    pipe.x -= pipeSpeed;
+                    
+                    // Remove off-screen pipes
+                    if (pipe.x + pipeWidth < 0) {
+                        pipes.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Draw pipes with better styling
+                    // Top pipe
+                    const topGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
+                    topGradient.addColorStop(0, '#4ECDC4');
+                    topGradient.addColorStop(0.5, '#44A08D');
+                    topGradient.addColorStop(1, '#4ECDC4');
+                    ctx.fillStyle = topGradient;
+                    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.gapY);
+                    
+                    // Top pipe cap
+                    ctx.fillStyle = '#44A08D';
+                    ctx.fillRect(pipe.x - 5, pipe.gapY - 30, pipeWidth + 10, 30);
+                    
+                    // Bottom pipe
+                    const bottomGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
+                    bottomGradient.addColorStop(0, '#4ECDC4');
+                    bottomGradient.addColorStop(0.5, '#44A08D');
+                    bottomGradient.addColorStop(1, '#4ECDC4');
+                    ctx.fillStyle = bottomGradient;
+                    ctx.fillRect(pipe.x, pipe.gapY + pipeGap, pipeWidth, canvas.height);
+                    
+                    // Bottom pipe cap
+                    ctx.fillStyle = '#44A08D';
+                    ctx.fillRect(pipe.x - 5, pipe.gapY + pipeGap, pipeWidth + 10, 30);
+                    
+                    // Pipe borders
+                    ctx.strokeStyle = '#2C7A7B';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.gapY);
+                    ctx.strokeRect(pipe.x, pipe.gapY + pipeGap, pipeWidth, canvas.height);
+                    
+                    // Check collision with more forgiving hitbox
+                    const hitboxRadius = bird.radius * 0.7;  // Smaller hitbox for easier gameplay
+                    if (bird.x + hitboxRadius > pipe.x && bird.x - hitboxRadius < pipe.x + pipeWidth) {
+                        if (bird.y - hitboxRadius < pipe.gapY || bird.y + hitboxRadius > pipe.gapY + pipeGap) {
+                            flappyGame.gameOver = true;
+                        }
+                    }
+                    
+                    // Update score
+                    if (!pipe.scored && pipe.x + pipeWidth < bird.x) {
+                        pipe.scored = true;
+                        flappyGame.score++;
+                        updateFlappyScore();
+                        
+                        // Update high score
+                        if (flappyGame.score > flappyGame.highScore) {
+                            flappyGame.highScore = flappyGame.score;
+                            localStorage.setItem('flappyHighScore', flappyGame.highScore);
+                            updateFlappyHighScore();
+                        }
+                    }
+                }
+                
+                // Check boundaries
+                if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+                    flappyGame.gameOver = true;
+                }
+            }
+            
+            // Draw bird with better graphics
+            // Bird body
+            const birdGradient = ctx.createRadialGradient(bird.x - 5, bird.y - 5, 2, bird.x, bird.y, bird.radius);
+            birdGradient.addColorStop(0, '#FFE66D');
+            birdGradient.addColorStop(1, '#FFBB33');
+            ctx.fillStyle = birdGradient;
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Bird outline
+            ctx.strokeStyle = '#FF9800';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Wing
+            ctx.fillStyle = '#FFA726';
+            ctx.beginPath();
+            ctx.ellipse(bird.x - 5, bird.y + 5, 8, 12, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye white
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(bird.x + 6, bird.y - 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye pupil
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(bird.x + 7, bird.y - 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Beak
+            ctx.fillStyle = '#FF6B35';
+            ctx.beginPath();
+            ctx.moveTo(bird.x + bird.radius - 2, bird.y);
+            ctx.lineTo(bird.x + bird.radius + 10, bird.y - 2);
+            ctx.lineTo(bird.x + bird.radius + 10, bird.y + 2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Draw score in-game
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 5;
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.strokeText(flappyGame.score, canvas.width / 2, 60);
+            ctx.fillText(flappyGame.score, canvas.width / 2, 60);
+            
+            if (flappyGame.gameOver) {
+                // Game over overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Game over text
+                ctx.fillStyle = '#FF6B6B';
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.font = 'bold 56px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeText('Game Over!', canvas.width / 2, canvas.height / 2 - 60);
+                ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - 60);
+                
+                // Score box
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.fillRect(canvas.width / 2 - 120, canvas.height / 2 - 10, 240, 100);
+                ctx.strokeStyle = '#4ECDC4';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(canvas.width / 2 - 120, canvas.height / 2 - 10, 240, 100);
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '24px Arial';
+                ctx.fillText('Score: ' + flappyGame.score, canvas.width / 2, canvas.height / 2 + 25);
+                ctx.fillText('Best: ' + flappyGame.highScore, canvas.width / 2, canvas.height / 2 + 55);
+                
+                ctx.font = '20px Arial';
+                ctx.fillStyle = '#666';
+                ctx.fillText('Click to play again', canvas.width / 2, canvas.height / 2 + 120);
+            } else {
+                requestAnimationFrame(flappyGameLoop);
+            }
+        }
+
+        function updateFlappyScore() {
+            const scoreEl = document.getElementById('flappy-score');
+            if (scoreEl) {
+                scoreEl.textContent = 'Score: ' + flappyGame.score;
+            }
+        }
+
+        function updateFlappyHighScore() {
+            const highScoreEl = document.getElementById('flappy-high-score');
+            if (highScoreEl && flappyGame) {
+                highScoreEl.textContent = 'Best: ' + flappyGame.highScore;
+            }
+        }
+    </script>
+</body>
+</html>
