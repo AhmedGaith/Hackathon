@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In - Cybersecurity Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="account-page">
+    <div class="win7-window">
+        <div class="win7-titlebar">
+            <div class="win7-icon"></div>
+            <div class="win7-title">Log In</div>
+            <div class="win7-controls">
+                <div class="win7-btn" title="Minimize">&#8211;</div>
+                <div class="win7-btn" title="Maximize">&#9723;</div>
+                <div class="win7-btn close" title="Close">&#10005;</div>
+            </div>
+        </div>
+        <div class="account-card">
+            <div class="account-header">
+                <h1>Log In</h1>
+                <p>Welcome back! Please log in to continue.</p>
+            </div>
+            <form id="login-form" class="checker-input">
+                <label for="login-username">Email</label>
+                <input type="email" id="login-username" required>
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" required>
+                <button type="submit" class="checker-button">Log In</button>
+            </form>
+            <div class="account-actions">
+                <a href="signup.html" class="account-button secondary">Don't have an account? Sign Up</a>
+            </div>
+            <div id="login-message" class="account-footnote"></div>
+        </div>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Security Check - Deadline 23:59</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="checker-page">
+    <div class="win7-window">
+        <div class="win7-titlebar">
+            <div class="win7-icon"></div>
+            <div class="win7-title">Security Checker</div>
+            <div class="win7-controls">
+                <div class="win7-btn" title="Minimize">&#8211;</div>
+                <div class="win7-btn" title="Maximize">&#9723;</div>
+                <div class="win7-btn close" title="Close">&#10005;</div>
+            </div>
+        </div>
+        <div class="checker-card">
+        <div class="checker-header">
+            <h1>URL Security Check</h1>
+            <p>Paste a link and get a quick safety assessment.</p>
+        </div>
+
+        <div class="checker-input">
+            <label for="url-input">Website URL</label>
+            <input id="url-input" type="text" placeholder="https://example.com" autocomplete="off">
+            <button class="checker-button" id="check-button">Check URL</button>
+        </div>
+
+        <div class="checker-result" id="checker-result" aria-live="polite">
+            <div class="result-title">Awaiting input...</div>
+            <ul class="result-list" id="result-list"></ul>
+        </div>
+
+        <!-- PDF Checker Section -->
+        <div class="checker-section">
+            <h2 class="section-title">📄 PDF File Scanner</h2>
+            <div class="checker-input">
+                <label for="pdf-input">Upload PDF File</label>
+                <input id="pdf-input" type="file" accept=".pdf,application/pdf">
+                <button class="checker-button" id="check-pdf-button">Scan PDF</button>
+            </div>
+            <div class="checker-result" id="pdf-result" aria-live="polite">
+                <div class="result-title">No file selected...</div>
+                <ul class="result-list" id="pdf-result-list"></ul>
+            </div>
+        </div>
+
+        <div class="checker-actions">
+            <a class="account-button secondary" href="main.html">Back to Account</a>
+            <a class="account-button" href="index.html">Enter the Game</a>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const checkButton = document.getElementById('check-button');
+        const urlInput = document.getElementById('url-input');
+        const resultBox = document.getElementById('checker-result');
+        const resultList = document.getElementById('result-list');
+        const resultTitle = resultBox.querySelector('.result-title');
+
+        const API_ENDPOINT = 'https://api.phishark.io/api/v1/scan';
+        const API_KEY = 'KULSRu5SjFegU6gfz37-xznIXmBAjMrgwmm3an6Vk4w=';
+
+        function normalizeUrl(raw) {
+            const trimmed = raw.trim();
+            if (!trimmed) return '';
+            if (!/^https?:\/\//i.test(trimmed)) {
+                return `https://${trimmed}`;
+            }
+            return trimmed;
+        }
+
+        function setLoadingState(isLoading) {
+            checkButton.disabled = isLoading;
+            checkButton.textContent = isLoading ? 'Checking...' : 'Check URL';
+        }
+
+        function renderResult({ level, message, findings }) {
+            resultBox.classList.remove('safe', 'warning', 'danger');
+            if (level && level !== 'neutral') {
+                resultBox.classList.add(level);
+            }
+
+            resultTitle.textContent = message || 'No result available.';
+            resultList.innerHTML = '';
+
+            findings.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                resultList.appendChild(li);
+            });
+        }
+
+        function evaluateIntegrity(scanData) {
+            const status = (scanData.status || '').toLowerCase();
+            const riskStatus = (scanData.risk_calculation?.risk_status || '').toLowerCase();
+
+            if (['malicious', 'phishing', 'high', 'critical'].includes(riskStatus)) {
+                return { level: 'danger', message: 'Scan indicates high risk or phishing detected.' };
+            }
+            if (['suspicious', 'medium'].includes(riskStatus)) {
+                return { level: 'warning', message: 'Scan indicates suspicious or medium risk indicators.' };
+            }
+            if (['clean', 'safe', 'low'].includes(riskStatus)) {
+                return { level: 'safe', message: 'Scan indicates the URL appears safe.' };
+            }
+
+            if (['clean', 'safe', 'success', 'passed'].includes(status)) {
+                return { level: 'safe', message: 'Scan indicates the URL appears safe.' };
+            }
+            if (['failed', 'malicious', 'phishing', 'blocked'].includes(status)) {
+                return { level: 'danger', message: 'Scan indicates high risk or phishing detected.' };
+            }
+
+            return { level: 'warning', message: 'Scan returned mixed or inconclusive results.' };
+        }
+
+        async function checkUrlSecurity(rawInput) {
+            const normalized = normalizeUrl(rawInput);
+            if (!normalized) {
+                renderResult({ level: 'neutral', message: 'Enter a URL to analyze.', findings: [] });
+                return;
+            }
+
+            try {
+                new URL(normalized);
+            } catch (error) {
+                renderResult({ level: 'danger', message: 'Invalid URL format.', findings: ['The URL is not valid.'] });
+                return;
+            }
+
+            setLoadingState(true);
+            renderResult({ level: 'neutral', message: 'Scanning with PhishArk...', findings: [] });
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ target: normalized })
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    renderResult({
+                        level: 'danger',
+                        message: 'Scan failed. Please try again later.',
+                        findings: [payload.message || 'Unknown error from scan service.']
+                    });
+                    return;
+                }
+
+                const scanData = payload.data || {};
+                const integrity = evaluateIntegrity(scanData);
+                const findings = [
+                    `Target: ${scanData.target || normalized}`,
+                    `Domain: ${scanData.domain || 'Unknown'}`,
+                    `Status: ${scanData.status || 'Unknown'}`,
+                    `Scan ID: ${scanData.scan_id || 'Unknown'}`
+                ];
+
+                if (scanData.risk_calculation?.risk_status) {
+                    findings.push(`Risk status: ${scanData.risk_calculation.risk_status}`);
+                }
+
+                if (typeof scanData.risk_calculation?.risk_score === 'number') {
+                    findings.push(`Risk score: ${scanData.risk_calculation.risk_score}`);
+                }
+
+                if (scanData.risk_indicator_stats) {
+                    const { high, medium, low } = scanData.risk_indicator_stats;
+                    findings.push(`Indicators (high/medium/low): ${high ?? 0}/${medium ?? 0}/${low ?? 0}`);
+                }
+
+                if (scanData.duration_ms) {
+                    findings.push(`Scan time: ${scanData.duration_ms} ms`);
+                }
+
+                if (scanData.error) {
+                    findings.push(`Error detail: ${scanData.error}`);
+                }
+
+                renderResult({
+                    level: integrity.level,
+                    message: integrity.message,
+                    findings
+                });
+            } catch (error) {
+                renderResult({
+                    level: 'danger',
+                    message: 'Network or CORS error during scan.',
+                    findings: ['The scan request failed. Check your connection or API permissions.']
+                });
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        checkButton.addEventListener('click', () => {
+            checkUrlSecurity(urlInput.value);
+        });
+
+        urlInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                checkUrlSecurity(urlInput.value);
+            }
+        });
+    </script>
+</body>
+<script>
+const pdfInput = document.getElementById('pdf-input');
+const checkPdfButton = document.getElementById('check-pdf-button');
+const pdfResultBox = document.getElementById('pdf-result');
+const pdfResultList = document.getElementById('pdf-result-list');
+const pdfResultTitle = pdfResultBox ? pdfResultBox.querySelector('.result-title') : null;
+
+const VT_API_KEY = '8839c039a62af2e9347a440f1c1942eebcf21d1d1b291dda01f233a23503a427';
+const VT_UPLOAD_URL = 'https://www.virustotal.com/api/v3/files';
+const VT_ANALYSIS_URL = 'https://www.virustotal.com/api/v3/analyses/';
+
+function setPdfLoadingState(isLoading) {
+    if (!checkPdfButton) return;
+    checkPdfButton.disabled = isLoading;
+    checkPdfButton.textContent = isLoading ? 'Scanning...' : 'Scan PDF';
+}
+
+function renderPdfResult({ message, findings }) {
+    if (!pdfResultBox || !pdfResultTitle || !pdfResultList) return;
+    pdfResultTitle.textContent = message || 'No result available.';
+    pdfResultList.innerHTML = '';
+    findings.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        pdfResultList.appendChild(li);
+    });
+}
+
+async function scanPdfFile() {
+    const file = pdfInput && pdfInput.files[0];
+    if (!file) {
+        renderPdfResult({
+            message: 'Please select a PDF file first.',
+            findings: []
+        });
+        return;
+    }
+    setPdfLoadingState(true);
+    renderPdfResult({ message: 'Uploading PDF to VirusTotal...', findings: [] });
+    try {
+        // Step 1: Upload file and get analysis id
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadResp = await fetch(VT_UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'x-apikey': VT_API_KEY },
+            body: formData
+        });
+        const uploadJson = await uploadResp.json();
+        const analysisId = uploadJson.data && uploadJson.data.id;
+        if (!analysisId) throw new Error('No analysis ID returned.');
+        renderPdfResult({ message: 'File uploaded. Waiting for analysis...', findings: [`Analysis ID: ${analysisId}`] });
+        // Step 2: Wait 15s, then fetch stats
+        await new Promise(r => setTimeout(r, 15000));
+        const statsResp = await fetch(VT_ANALYSIS_URL + analysisId, {
+            method: 'GET',
+            headers: { 'x-apikey': VT_API_KEY }
+        });
+        const statsJson = await statsResp.json();
+        const stats = statsJson.data && statsJson.data.attributes && statsJson.data.attributes.stats;
+        if (!stats) throw new Error('No stats found in analysis result.');
+        const findings = [
+            `Malicious: ${stats.malicious}`,
+            `Suspicious: ${stats.suspicious}`,
+            `Undetected: ${stats.undetected}`,
+            `Harmless: ${stats.harmless}`
+        ];
+        let safeMsg = '🟢 This PDF looks safe to open.';
+        if (stats.malicious > 0 || stats.suspicious > 0) {
+            safeMsg = '🔴 This PDF is NOT safe to open!';
+        }
+        renderPdfResult({ message: safeMsg, findings });
+    } catch (error) {
+        renderPdfResult({ message: 'Scan failed.', findings: [error.message || String(error)] });
+    } finally {
+        setPdfLoadingState(false);
+    }
+}
+
+if (checkPdfButton && pdfInput) {
+    checkPdfButton.addEventListener('click', scanPdfFile);
+    pdfInput.addEventListener('change', () => {
+        const file = pdfInput.files[0];
+        if (file) {
+            renderPdfResult({
+                message: `File selected: ${file.name} (${Math.round(file.size / 1024)} KB)` ,
+                findings: ['Click "Scan PDF" to analyze the file.']
+            });
+        }
+    });
+}
+</script>
+</html>

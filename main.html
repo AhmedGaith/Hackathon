@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Welcome - Deadline 23:59</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body class="account-page">
+	<div class="win7-window">
+		<div class="win7-titlebar">
+			<div class="win7-icon"></div>
+			<div class="win7-title">Account</div>
+			<div class="win7-controls">
+				<div class="win7-btn" title="Minimize">&#8211;</div>
+				<div class="win7-btn" title="Maximize">&#9723;</div>
+				<div class="win7-btn close" title="Close">&#10005;</div>
+			</div>
+		</div>
+		<div class="account-card">
+		<div class="account-header">
+			<h1>Welcome back!</h1>
+			<p>Your account is ready for today’s deadline.</p>
+		</div>
+
+		
+
+		<div class="account-actions">
+			<a class="account-button" href="index.html">Enter the Game</a>
+			<a class="account-button secondary" href="url-checker.html">Check for malware</a>
+		</div>
+		<p class="account-footnote">Tip: Stay alert for phishing and unsafe downloads.</p>
+	</div>
+</body>
+<script src="auth.js"></script>
+<script>
+// Show logout button if logged in
+if (localStorage.getItem('currentUser')) {
+	const btn = document.createElement('button');
+	btn.textContent = 'Log Out';
+	btn.className = 'account-button';
+	btn.style.position = 'fixed';
+	btn.style.top = '24px';
+	btn.style.right = '24px';
+	btn.onclick = logout;
+	document.body.appendChild(btn);
+}
+</script>
+</html>
