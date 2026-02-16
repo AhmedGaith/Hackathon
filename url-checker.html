@@ -55,7 +55,13 @@
         </div>
     </div>
 
+    <script src="config.js" onerror="alert('Configuration file missing! Please copy config.example.js to config.js and add your API keys. See README.md for details.')"></script>
     <script>
+        // Validate CONFIG object exists
+        if (typeof CONFIG === 'undefined' || !CONFIG.PHISHARK_API_KEY || !CONFIG.VIRUSTOTAL_API_KEY) {
+            alert('Configuration error! Please ensure config.js contains valid API keys. See config.example.js and README.md for details.');
+        }
+        
         const checkButton = document.getElementById('check-button');
         const urlInput = document.getElementById('url-input');
         const resultBox = document.getElementById('checker-result');
@@ -63,7 +69,7 @@
         const resultTitle = resultBox.querySelector('.result-title');
 
         const API_ENDPOINT = 'https://api.phishark.io/api/v1/scan';
-        const API_KEY = 'KULSRu5SjFegU6gfz37-xznIXmBAjMrgwmm3an6Vk4w=';
+        const API_KEY = CONFIG.PHISHARK_API_KEY;
 
         function normalizeUrl(raw) {
             const trimmed = raw.trim();
@@ -221,7 +227,7 @@ const pdfResultBox = document.getElementById('pdf-result');
 const pdfResultList = document.getElementById('pdf-result-list');
 const pdfResultTitle = pdfResultBox ? pdfResultBox.querySelector('.result-title') : null;
 
-const VT_API_KEY = '8839c039a62af2e9347a440f1c1942eebcf21d1d1b291dda01f233a23503a427';
+const VT_API_KEY = CONFIG.VIRUSTOTAL_API_KEY;
 const VT_UPLOAD_URL = 'https://www.virustotal.com/api/v3/files';
 const VT_ANALYSIS_URL = 'https://www.virustotal.com/api/v3/analyses/';
 
