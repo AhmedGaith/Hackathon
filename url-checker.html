@@ -55,8 +55,13 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
+    <script src="config.js" onerror="alert('Configuration file missing! Please copy config.example.js to config.js and add your API keys. See README.md for details.')"></script>
     <script>
+        // Validate CONFIG object exists
+        if (typeof CONFIG === 'undefined' || !CONFIG.PHISHARK_API_KEY || !CONFIG.VIRUSTOTAL_API_KEY) {
+            alert('Configuration error! Please ensure config.js contains valid API keys. See config.example.js and README.md for details.');
+        }
+        
         const checkButton = document.getElementById('check-button');
         const urlInput = document.getElementById('url-input');
         const resultBox = document.getElementById('checker-result');
